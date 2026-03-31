@@ -213,7 +213,7 @@
 
   // Helpers
   function appendMessage(role, text) {
-    var div = document.createElement("div");
+    const div = document.createElement("div");
     div.className = "msg " + role;
     div.textContent = text;
     messagesEl.appendChild(div);
@@ -222,7 +222,7 @@
   }
 
   function createLoadingBubble() {
-    var div = document.createElement("div");
+    const div = document.createElement("div");
     div.className = "msg loading";
     div.innerHTML = '<span>正在工作</span><div class="dots"><span></span><span></span><span></span></div>';
     messagesEl.appendChild(div);
@@ -253,7 +253,10 @@
   }
 
   function cancelRequest() {
-    if (abortController) { abortController.abort(); abortController = null; }
+    if (abortController) {
+      abortController.abort();
+      abortController = null;
+    }
     clearTimeout(timeoutTimer);
     stopTimeoutBar();
     setLoading(false);
@@ -261,26 +264,27 @@
 
   // Core: send message
   async function sendMessage() {
-    var text = inputEl.value.trim();
+    const text = inputEl.value.trim();
     if (!text || isLoading) return;
 
     inputEl.value = "";
     inputEl.style.height = "44px";
 
     appendMessage("user", text);
-    var loadingBubble = createLoadingBubble();
+    const loadingBubble = createLoadingBubble();
     setLoading(true);
     startTimeoutBar(REQUEST_TIMEOUT_MS);
 
     abortController = new AbortController();
 
-    // Hard timeout: abort the fetch if it hasn't finished in time
+    // Hard timeout: abort the fetch if it hasn't finished in time.
+    // The resulting AbortError is caught in the catch block below.
     timeoutTimer = setTimeout(function() {
       abortController.abort();
     }, REQUEST_TIMEOUT_MS);
 
     try {
-      var response = await fetch(API_ENDPOINT, {
+      const response = await fetch(API_ENDPOINT, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ message: text }),
@@ -293,8 +297,9 @@
         throw new Error("服务器错误 (" + response.status + ")");
       }
 
-      var data = await response.json();
-      var reply = (data && data.reply) ? data.reply : JSON.stringify(data);
+      const data = await response.json();
+      // Use data.reply if present; fall back to a friendly message for unexpected shapes
+      const reply = (data && data.reply) ? data.reply : "(无响应内容)";
 
       loadingBubble.remove();
       appendMessage("ai", reply);
